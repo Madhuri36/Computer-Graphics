@@ -8,6 +8,7 @@ All programs are mostly implemented in **Python**
 1. Lab-1: Overview of Three.js
 2. Lab-2: 2D Transformations
 3. Lab-3: 3D Transformations
+4. Lab-4: Projections
 
 ## Requirements
 - Python 3.9+
