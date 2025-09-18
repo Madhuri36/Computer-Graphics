@@ -8,8 +8,8 @@ All programs are mostly implemented in **Python**
 1. Lab-1: Overview of Three.js
 2. Lab-2: 2D Transformations
 3. Lab-3: 3D Transformations
-4. LAB-4: Projections- Orthogonal Vs Perspective
-5. LAB-5: Line Drawing Algorithms- DDA Vs Bresenhams
+4. Lab-4: Projections- Orthogonal Vs Perspective
+5. Lab-5: Line Drawing Algorithms- DDA Vs Bresenhams
 
 ## Requirements
 - Python 3.9+
