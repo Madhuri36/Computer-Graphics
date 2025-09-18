@@ -10,6 +10,7 @@ All programs are mostly implemented in **Python**
 3. Lab-3: 3D Transformations
 4. LAB-4: Projections- Orthogonal Vs Perspective
 5. LAB-5: Line Drawing Algorithms- DDA Vs Bresenhams
+4. Lab-4: Projections
 
 ## Requirements
 - Python 3.9+
