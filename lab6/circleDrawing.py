@@ -109,8 +109,9 @@ def draw_panel(screen, font, small_font, center, radius, bench_result):
     instructions = [
         "Controls:",
         "Click to set center (yellow)",
-        "Use mouse wheel to adjust",
-        "  radius (or UP/DOWN keys)",
+        "Mouse wheel: ±5 radius",
+        "Shift+wheel: ±1 radius",
+        "UP/DOWN: ±5, Shift: ±1",
         "",
         "M - Draw Midpoint (cyan)",
         "B - Draw Bresenham (red)",
@@ -184,9 +185,13 @@ def main():
                     bench_result = None
                 
                 elif ev.button == 4:  # Mouse wheel up
-                    radius = min(radius + 5, 300)
+                    mods = pygame.key.get_mods()
+                    increment = 1 if mods & pygame.KMOD_SHIFT else 5
+                    radius = min(radius + increment, 300)
                 elif ev.button == 5:  # Mouse wheel down
-                    radius = max(radius - 5, 10)
+                    mods = pygame.key.get_mods()
+                    decrement = 1 if mods & pygame.KMOD_SHIFT else 5
+                    radius = max(radius - decrement, 1)
             
             elif ev.type == pygame.KEYDOWN:
                 if ev.key == pygame.K_c:
@@ -196,9 +201,13 @@ def main():
                     bench_result = None
                 
                 elif ev.key == pygame.K_UP:
-                    radius = min(radius + 5, 300)
+                    mods = pygame.key.get_mods()
+                    increment = 1 if mods & pygame.KMOD_SHIFT else 5
+                    radius = min(radius + increment, 300)
                 elif ev.key == pygame.K_DOWN:
-                    radius = max(radius - 5, 10)
+                    mods = pygame.key.get_mods()
+                    decrement = 1 if mods & pygame.KMOD_SHIFT else 5
+                    radius = max(radius - decrement, 1)
                 
                 elif ev.key == pygame.K_m and center:
                     midpoint_circle(draw_surface, center[0], center[1], radius, MIDPOINT_COLOR)
