@@ -13,9 +13,19 @@ function degreesToRadians(degrees) {
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xC8E6C9);
 
-// Camera
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(5, 5, 5);
+// ✨ CHANGED: Replaced PerspectiveCamera with OrthographicCamera for a true isometric view
+const aspect = window.innerWidth / window.innerHeight;
+const frustumSize = 15; // This value controls the "zoom" level. Increase to zoom out, decrease to zoom in.
+const camera = new THREE.OrthographicCamera(
+  frustumSize * aspect / -2,
+  frustumSize * aspect / 2,
+  frustumSize / 2,
+  frustumSize / -2,
+  0.1,
+  100 // Clipping plane can be closer for orthographic cameras
+);
+camera.position.set(10, 10, 10); // The perfect 45-degree angle for an isometric view
+camera.lookAt(0, 0, 0); // Look at the very center of the scene floor
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -35,6 +45,15 @@ RectAreaLightUniformsLib.init();
 // Controls
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+// ✨ CHANGED: Set the orbit controls target to the center of the floor to match the camera
+controls.target.set(0, 0, 0);
+
+// ✨ NEW: Limit camera rotation and disable panning
+controls.maxPolarAngle = Math.PI / 2; // Prevent camera from going below the floor.
+controls.minPolarAngle = 0; // Prevent camera from going directly overhead
+controls.enablePan = false; // Disable panning to keep the scene centered.
+controls.update(); // This is crucial to apply the new target immediately
+
 
 // 🌤️ Final Natural Lighting Setup
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
@@ -51,7 +70,7 @@ scene.add(ceilingLight);
 // ==================================================================
 // ✨ NEW LAMP LIGHTING ✨
 // ==================================================================
-const lampBulbPosition = new THREE.Vector3(-4.3, 2, 4.6);
+const lampBulbPosition = new THREE.Vector3(-4.3, -0.5, 4.6);
 
 const lampSpotlight = new THREE.SpotLight(0xffd580, 3, 10, Math.PI * 0.15, 0.3, 1.5);
 lampSpotlight.position.copy(lampBulbPosition);
@@ -65,7 +84,7 @@ lampSpotlight.shadow.bias = -0.001;
 scene.add(lampSpotlight);
 scene.add(lampSpotlight.target);
 
-const lampGlow = new THREE.PointLight(0xffd580, 1.2, 4);
+const lampGlow = new THREE.PointLight(0xffd580, 1.6, 4);
 lampGlow.position.copy(lampBulbPosition);
 scene.add(lampGlow);
 // ==================================================================
@@ -84,19 +103,24 @@ scene.add(plantSpotlight.target);
 const room = new THREE.Group();
 scene.add(room);
 
+
 // ==================================================================
 // ✨ DIORAMA BOX STYLE - WALLS AND FLOOR ✨
 // ==================================================================
 
-const WALL_THICKNESS = 0.3;
+const WALL_THICKNESS = 0.3; // Kept your original thickness
 const ROOM_SIZE = 10;
 const ROOM_HEIGHT = 5;
 
+// ✨ NEW: Move the entire room group down to vertically center it in the view
+room.position.y = -ROOM_HEIGHT / 2;
+
+
 // Brown material for outer edges/sides
-const brownEdgeMaterial = new THREE.MeshStandardMaterial({ 
-    color: 0x8B4513, 
-    roughness: 0.7, 
-    metalness: 0 
+const brownEdgeMaterial = new THREE.MeshStandardMaterial({
+    color: 0x8B4513,
+    roughness: 0.7,
+    metalness: 0
 });
 
 // Setup texture loader
@@ -128,10 +152,10 @@ const floorTopMaterial = new THREE.MeshStandardMaterial({
 });
 
 // Wall inner material (green)
-const wallInnerMaterial = new THREE.MeshStandardMaterial({ 
-    color: 0x4F604D, 
-    roughness: 0.8, 
-    metalness: 0 
+const wallInnerMaterial = new THREE.MeshStandardMaterial({
+    color: 0x4F604D,
+    roughness: 0.8,
+    metalness: 0
 });
 
 // ==================================================================
@@ -385,9 +409,15 @@ const tick = () => {
 tick();
 
 // Resize Handling
+// ✨ CHANGED: The resize handler must be updated to work with an OrthographicCamera
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  const aspect = window.innerWidth / window.innerHeight;
+  camera.left = frustumSize * aspect / -2;
+  camera.right = frustumSize * aspect / 2;
+  camera.top = frustumSize / 2;
+  camera.bottom = frustumSize / -2;
   camera.updateProjectionMatrix();
+
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
