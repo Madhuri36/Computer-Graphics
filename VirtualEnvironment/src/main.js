@@ -136,7 +136,7 @@ gltfLoader.load('models/shelf.glb', (gltf) => {
 gltfLoader.load('models/indoor_plant.glb', (gltf) => {
     const indoor_plant = gltf.scene;
     indoor_plant.scale.set(0.3, 0.3, 0.3);
-    indoor_plant.position.set(-0.5, 0.15, -4.2);
+    indoor_plant.position.set(2.2, 0.15, -4.2);
     room.add(indoor_plant);
 });
 
@@ -158,6 +158,24 @@ gltfLoader.load('models/carpet.glb', (gltf) => {
     // const angleInDegrees = 270;
     // carpet.rotation.y = degreesToRadians(angleInDegrees);
     room.add(carpet);
+});
+
+gltfLoader.load('models/frame.glb', (gltf) => {
+    const frame = gltf.scene;
+    frame.scale.set(1, 1, 1);
+    frame.position.set(-5, 2, 1.9);
+    // const angleInDegrees = 270;
+    frame.rotation.y = Math.PI/2;
+    room.add(frame);
+});
+
+gltfLoader.load('models/dog_bed.glb', (gltf) => {
+    const dog_bed = gltf.scene;
+    dog_bed.scale.set(1.2, 1.2, 1.2);
+    dog_bed.position.set(3.9, 0.23, -4);
+    // const angleInDegrees = 270;
+    // dog_bed.rotation.y = Math.PI/2;
+    room.add(dog_bed);
 });
 
 // Animation
