@@ -28,7 +28,7 @@ camera.position.set(10, 10, 10); // The perfect 45-degree angle for an isometric
 camera.lookAt(0, 0, 0); // Look at the very center of the scene floor
 
 // Renderer
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antalias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.physicallyCorrectLights = true;
@@ -55,7 +55,7 @@ controls.enablePan = false; // Disable panning to keep the scene centered.
 controls.update(); // This is crucial to apply the new target immediately
 
 
-// 🌤️ Final Natural Lighting Setup
+// 🌤 Final Natural Lighting Setup
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
 const hemisphereLight = new THREE.HemisphereLight(0xddeeff, 0x202020, 0.8);
@@ -93,11 +93,24 @@ const windowLight = new THREE.RectAreaLight(0xaaccff, 1, 4, 5);
 windowLight.position.set(6, 2.5, -2.5);
 windowLight.lookAt(-5, 2.5, -2.5);
 scene.add(windowLight);
+
 const plantSpotlight = new THREE.SpotLight(0xccffcc, 4, 12, Math.PI * 0.15, 0.6, 1);
 plantSpotlight.position.set(3.5, 5, -2.5);
 plantSpotlight.target.position.set(2.2, 0.15, -4.2);
 scene.add(plantSpotlight);
 scene.add(plantSpotlight.target);
+
+// ==================================================================
+// ✨ NEW: DOG LIGHTING ✨
+// ==================================================================
+const dogSpotlight = new THREE.SpotLight(0xffffff, 3, 10, Math.PI * 0.2, 0.5, 1);
+dogSpotlight.position.set(3, 4, -1); // Positioned above and slightly in front of the dog
+dogSpotlight.target.position.set(3.9, 0.25, -3.2); // Aims the light directly at the dog's position
+dogSpotlight.castShadow = true;
+dogSpotlight.shadow.bias = -0.002;
+scene.add(dogSpotlight);
+scene.add(dogSpotlight.target);
+// ==================================================================
 
 // Room
 const room = new THREE.Group();
@@ -400,8 +413,42 @@ gltfLoader.load('models/small_plant.glb', (gltf) => {
   room.add(small_plant);
 });
 
+// ==================================================================
+// ✨ NEW: Load Animated Dog ✨
+// ==================================================================
+let dogMixer; // Declare the mixer in a higher scope to access it in the animation loop
+
+gltfLoader.load('models/dog.glb', (gltf) => {
+    const dog = gltf.scene;
+    dog.scale.set(0.5, 0.5, 0.5);
+    // Position the dog on its bed
+    dog.position.set(2.5, 0.1, -2.9);
+    // dog.rotation.y = degreesToRadians(200);
+    setShadows(dog);
+    room.add(dog);
+
+    // Setup and play the animation
+    dogMixer = new THREE.AnimationMixer(dog);
+    if (gltf.animations.length) {
+        const animationAction = dogMixer.clipAction(gltf.animations[0]);
+        animationAction.play();
+    }
+});
+// ==================================================================
+
+
+// ✨ NEW: Add a Clock for animation updates
+const clock = new THREE.Clock();
+
+
 // Animation Loop
 const tick = () => {
+  // ✨ NEW: Update the animation mixer if it exists
+  const delta = clock.getDelta();
+  if (dogMixer) {
+    dogMixer.update(delta);
+  }
+
   controls.update();
   renderer.render(scene, camera);
   window.requestAnimationFrame(tick);
