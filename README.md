@@ -12,6 +12,7 @@ All programs are mostly implemented in **Python**
 5. Lab-5: Line Drawing Algorithms- DDA Vs Bresenhams
 6. Lab-6: Circle Drawing Algorithms- Midpoint vs Bresenhams
 7. Lab-7: Polygon Filling Algorithms- Scanline Fill, Flood Fill, Boundary Fill
+8. Lab-8: Ray Tracing Algorithm
 
 ## Requirements
 - Python 3.9+
