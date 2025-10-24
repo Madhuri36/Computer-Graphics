@@ -17,3 +17,69 @@ body {
 canvas {
   display: block;
 }
+
+#scene-ui {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 1000;
+}
+
+#scene-ui h3 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+}
+
+.scene-btn {
+  display: block;
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+#btn-walking {
+  background: #4CAF50;
+}
+
+#btn-studying {
+  background: #2196F3;
+}
+
+#btn-petting {
+  background: #FF9800;
+}
+
+#btn-sleeping {
+  background: #9C27B0;
+}
+
+.scene-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.scene-btn.active {
+  font-weight: bold;
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+#loading-status {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #ffeb3b;
+}
+
+#loading-status.hidden {
+  display: none;
+}

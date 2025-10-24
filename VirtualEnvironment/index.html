@@ -5,12 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Virtual Room</title>
     <link rel="icon" href="favicon.png" type="image/png">
-    <style>
-      body { margin: 0; }
-      canvas { display: block; }
-    </style>
+    <link rel="stylesheet" href="./src/style.css">
   </head>
   <body>
+    <div id="scene-ui">
+      <h3>Choose Scene</h3>
+      <button id="btn-walking" class="scene-btn active">🚶 Walking Around</button>
+      <button id="btn-studying" class="scene-btn">📚 Studying</button>
+      <button id="btn-petting" class="scene-btn">🐕 Petting Dog</button>
+      <button id="btn-sleeping" class="scene-btn">😴 Sleeping</button>
+      <div id="loading-status">Loading animations...</div>
+    </div>
     
     <script type="module" src="./src/main.js"></script>
   </body>
