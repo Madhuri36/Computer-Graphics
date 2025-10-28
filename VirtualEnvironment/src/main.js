@@ -197,7 +197,7 @@ gltfLoader.load('models/chair.glb', (gltf) => {
 gltfLoader.load('models/computer.glb', (gltf) => {
     const computer = gltf.scene;
     computer.scale.set(0.0004, 0.0004, 0.0004);
-    computer.position.set(-3, 1.8, -4);
+    computer.position.set(-3.5, 1.8, -4);
     setShadows(computer);
     room.add(computer);
 });
@@ -360,8 +360,8 @@ const scenes = {
         animation: 'sit'
     },
     petting: {
-        position: { x: 1.8, y: 0.15, z: -3.2 },
-        rotation: { y: degreesToRadians(45) },
+        position: { x: 2.5, y: 0.15, z: -3.7 },
+        rotation: { y: degreesToRadians(60) },
         animation: 'pet'
     },
     sleeping: {
@@ -378,7 +378,7 @@ let isTransitioning = false;
 gltfLoader.load('models/dog.glb', (gltf) => {
     const dog = gltf.scene;
     dog.scale.set(0.5, 0.5, 0.5);
-    dog.position.set(2.5, 0.1, -2.9);
+    dog.position.set(4, 0.4, -3.6);
     setShadows(dog);
     room.add(dog);
 
