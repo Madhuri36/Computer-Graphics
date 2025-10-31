@@ -7,7 +7,7 @@ import time
 pygame.init()
 
 # Constants
-WIDTH, HEIGHT = 1200, 800
+WIDTH, HEIGHT = 1000, 600
 FPS = 60
 GRID_SIZE = 50
 
