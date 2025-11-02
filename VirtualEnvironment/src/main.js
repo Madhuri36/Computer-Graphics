@@ -347,11 +347,9 @@ let animations = {};
 let animationsLoaded = 0;
 const totalAnimations = 4;
 
-// Scene Management (removed cameraOffset)
+// Scene Management
 const scenes = {
     walking: {
-        position: { x: 0, y: 0.15, z: 0 },
-        rotation: { y: 0 },
         animation: 'walk'
     },
     studying: {
@@ -372,7 +370,13 @@ const scenes = {
 };
 
 let currentScene = 'walking';
-let isTransitioning = false;
+
+// MODIFICATION: Simplified walking logic
+const walkingStartX = 2;
+const walkingStartZ = 0;
+const walkingEndZ = 3;
+let isWalkingForward = true;
+const walkingSpeed = 1;
 
 // Load Animated Dog
 gltfLoader.load('models/dog.glb', (gltf) => {
@@ -390,8 +394,8 @@ gltfLoader.load('models/dog.glb', (gltf) => {
 
 // Create a shared female character container
 femaleCharacter = new THREE.Group();
-femaleCharacter.position.set(0, 0.15, 0);
-femaleCharacter.rotation.y = 0;
+femaleCharacter.position.set(walkingStartX, 0.15, walkingStartZ);
+femaleCharacter.rotation.y = degreesToRadians(0);
 room.add(femaleCharacter);
 
 // Character models for different animations
@@ -449,63 +453,25 @@ function switchToAnimation(animName) {
     currentAction = anim;
 }
 
-// Simple lerp function for smooth transitions
-function lerp(start, end, factor) {
-    return start + (end - start) * factor;
-}
-
-// Transition to a new scene (without camera movement)
+// Transition to a new scene (instant, no walking transition)
 function transitionToScene(sceneName) {
-    if (isTransitioning || animationsLoaded < totalAnimations || sceneName === currentScene) return;
+    if (animationsLoaded < totalAnimations || sceneName === currentScene) return;
     
-    isTransitioning = true;
-    const targetScene = scenes[sceneName];
-    const startPos = { ...femaleCharacter.position };
-    const startRot = femaleCharacter.rotation.y;
+    currentScene = sceneName;
     
-    let progress = 0;
-    const duration = 2000;
-    const startTime = Date.now();
-    
-    const direction = new THREE.Vector2(
-        targetScene.position.x - startPos.x,
-        targetScene.position.z - startPos.z
-    );
-    const walkingRotation = Math.atan2(direction.x, direction.y);
-    
-    function animate() {
-        const elapsed = Date.now() - startTime;
-        progress = Math.min(elapsed / duration, 1);
-        
-        const eased = progress < 0.5
-            ? 2 * progress * progress
-            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-        
-        if (progress < 0.9 && currentScene !== sceneName) {
-            if (!currentAction || currentAction !== animations.walk) {
-                switchToAnimation('walk');
-            }
-            femaleCharacter.rotation.y = lerp(startRot, walkingRotation, eased);
-        } else if (progress >= 0.9) {
-            if (animations[targetScene.animation] && currentAction !== animations[targetScene.animation]) {
-                switchToAnimation(targetScene.animation);
-            }
-            femaleCharacter.rotation.y = lerp(walkingRotation, targetScene.rotation.y, (progress - 0.9) * 10);
-        }
-        
-        femaleCharacter.position.x = lerp(startPos.x, targetScene.position.x, eased);
-        femaleCharacter.position.y = lerp(startPos.y, targetScene.position.y, eased);
-        femaleCharacter.position.z = lerp(startPos.z, targetScene.position.z, eased);
-        
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        } else {
-            isTransitioning = false;
-            currentScene = sceneName;
-        }
+    if (sceneName === 'walking') {
+        // Reset to walking path
+        femaleCharacter.position.set(walkingStartX, 0.15, walkingStartZ);
+        femaleCharacter.rotation.y = degreesToRadians(0);
+        isWalkingForward = true;
+        switchToAnimation('walk');
+    } else {
+        // Instant transition to scene
+        const targetScene = scenes[sceneName];
+        femaleCharacter.position.set(targetScene.position.x, targetScene.position.y, targetScene.position.z);
+        femaleCharacter.rotation.y = targetScene.rotation.y;
+        switchToAnimation(targetScene.animation);
     }
-    
-    animate();
 }
 
 // UI Event Listeners
@@ -542,6 +508,44 @@ setInterval(updateUIHighlight, 100);
 // Clock for Animation
 const clock = new THREE.Clock();
 
+function updateWalkingPattern(delta) {
+    // Only run this logic if the current scene is 'walking'
+    if (currentScene !== 'walking') return;
+
+    if (isWalkingForward) {
+        // Move the character forward along the Z-axis
+        femaleCharacter.position.z += walkingSpeed * delta;
+
+        // Check if the character has reached or passed the end point
+        if (femaleCharacter.position.z >= walkingEndZ) {
+            // Clamp the position to the exact end point to prevent overshooting
+            femaleCharacter.position.z = walkingEndZ;
+            
+            // Flip the direction
+            isWalkingForward = false;
+            
+            // Turn the character 180 degrees to walk back
+            femaleCharacter.rotation.y = degreesToRadians(180);
+        }
+    } else {
+        // Move the character backward along the Z-axis
+        femaleCharacter.position.z -= walkingSpeed * delta;
+
+        // Check if the character has reached or passed the start point
+        if (femaleCharacter.position.z <= walkingStartZ) {
+            // Clamp the position to the exact start point
+            femaleCharacter.position.z = walkingStartZ;
+            
+            // Flip the direction
+            isWalkingForward = true;
+            
+            // Turn the character back to the starting rotation (0 degrees)
+            femaleCharacter.rotation.y = degreesToRadians(0);
+        }
+    }
+}
+
+
 // Animation Loop
 const tick = () => {
     const delta = clock.getDelta();
@@ -555,6 +559,8 @@ const tick = () => {
             animations[key].mixer.update(delta);
         }
     });
+    
+    updateWalkingPattern(delta);
 
     controls.update();
     renderer.render(scene, camera);
