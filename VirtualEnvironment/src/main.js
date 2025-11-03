@@ -350,6 +350,8 @@ const totalAnimations = 4;
 // Scene Management
 const scenes = {
     walking: {
+        position: { x: 1.3, y: 0.15, z: 1.3},
+        rotation: { y: degreesToRadians(0) },
         animation: 'walk'
     },
     studying: {
@@ -371,13 +373,6 @@ const scenes = {
 
 let currentScene = 'walking';
 
-// MODIFICATION: Simplified walking logic
-const walkingStartX = 2;
-const walkingStartZ = 0;
-const walkingEndZ = 3;
-let isWalkingForward = true;
-const walkingSpeed = 1;
-
 // Load Animated Dog
 gltfLoader.load('models/dog.glb', (gltf) => {
     const dog = gltf.scene;
@@ -394,8 +389,9 @@ gltfLoader.load('models/dog.glb', (gltf) => {
 
 // Create a shared female character container
 femaleCharacter = new THREE.Group();
-femaleCharacter.position.set(walkingStartX, 0.15, walkingStartZ);
-femaleCharacter.rotation.y = degreesToRadians(0);
+// Set initial position based on the default scene
+femaleCharacter.position.set(scenes[currentScene].position.x, scenes[currentScene].position.y, scenes[currentScene].position.z);
+femaleCharacter.rotation.y = scenes[currentScene].rotation.y;
 room.add(femaleCharacter);
 
 // Character models for different animations
@@ -423,7 +419,7 @@ function loadFemaleAnimation(name, filename) {
         animationsLoaded++;
         
         if (animationsLoaded === totalAnimations) {
-            switchToAnimation('walk');
+            switchToAnimation(scenes[currentScene].animation);
         }
         
         console.log(`Loaded ${name} animation (${animationsLoaded}/${totalAnimations})`);
@@ -453,25 +449,17 @@ function switchToAnimation(animName) {
     currentAction = anim;
 }
 
-// Transition to a new scene (instant, no walking transition)
+// Transition to a new scene
 function transitionToScene(sceneName) {
     if (animationsLoaded < totalAnimations || sceneName === currentScene) return;
     
     currentScene = sceneName;
     
-    if (sceneName === 'walking') {
-        // Reset to walking path
-        femaleCharacter.position.set(walkingStartX, 0.15, walkingStartZ);
-        femaleCharacter.rotation.y = degreesToRadians(0);
-        isWalkingForward = true;
-        switchToAnimation('walk');
-    } else {
-        // Instant transition to scene
-        const targetScene = scenes[sceneName];
-        femaleCharacter.position.set(targetScene.position.x, targetScene.position.y, targetScene.position.z);
-        femaleCharacter.rotation.y = targetScene.rotation.y;
-        switchToAnimation(targetScene.animation);
-    }
+    // Instant transition to the target scene's position and animation
+    const targetScene = scenes[sceneName];
+    femaleCharacter.position.set(targetScene.position.x, targetScene.position.y, targetScene.position.z);
+    femaleCharacter.rotation.y = targetScene.rotation.y;
+    switchToAnimation(targetScene.animation);
 }
 
 // UI Event Listeners
@@ -508,44 +496,6 @@ setInterval(updateUIHighlight, 100);
 // Clock for Animation
 const clock = new THREE.Clock();
 
-function updateWalkingPattern(delta) {
-    // Only run this logic if the current scene is 'walking'
-    if (currentScene !== 'walking') return;
-
-    if (isWalkingForward) {
-        // Move the character forward along the Z-axis
-        femaleCharacter.position.z += walkingSpeed * delta;
-
-        // Check if the character has reached or passed the end point
-        if (femaleCharacter.position.z >= walkingEndZ) {
-            // Clamp the position to the exact end point to prevent overshooting
-            femaleCharacter.position.z = walkingEndZ;
-            
-            // Flip the direction
-            isWalkingForward = false;
-            
-            // Turn the character 180 degrees to walk back
-            femaleCharacter.rotation.y = degreesToRadians(180);
-        }
-    } else {
-        // Move the character backward along the Z-axis
-        femaleCharacter.position.z -= walkingSpeed * delta;
-
-        // Check if the character has reached or passed the start point
-        if (femaleCharacter.position.z <= walkingStartZ) {
-            // Clamp the position to the exact start point
-            femaleCharacter.position.z = walkingStartZ;
-            
-            // Flip the direction
-            isWalkingForward = true;
-            
-            // Turn the character back to the starting rotation (0 degrees)
-            femaleCharacter.rotation.y = degreesToRadians(0);
-        }
-    }
-}
-
-
 // Animation Loop
 const tick = () => {
     const delta = clock.getDelta();
@@ -559,8 +509,6 @@ const tick = () => {
             animations[key].mixer.update(delta);
         }
     });
-    
-    updateWalkingPattern(delta);
 
     controls.update();
     renderer.render(scene, camera);
