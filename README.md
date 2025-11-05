@@ -13,7 +13,8 @@ All programs are mostly implemented in **Python**
 6. Lab-6: Circle Drawing Algorithms- Midpoint vs Bresenhams
 7. Lab-7: Polygon Filling Algorithms- Scanline Fill, Flood Fill, Boundary Fill
 8. Lab-8: Ray Tracing Algorithm
-9. Extra Lab: Virtual Environment
+9. Lab-9: Graphics APIs Comparison
+10. Extra Lab: Virtual Environment
    
 ## Requirements
 - Python 3.9+
