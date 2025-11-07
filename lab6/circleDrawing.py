@@ -4,7 +4,7 @@ import random
 import time
 
 # -------- Config --------
-WIDTH, HEIGHT = 1200, 650  
+WIDTH, HEIGHT = 1100, 650  
 DRAW_AREA = (800, HEIGHT)  
 PANEL_AREA = (WIDTH - DRAW_AREA[0], HEIGHT)
 
