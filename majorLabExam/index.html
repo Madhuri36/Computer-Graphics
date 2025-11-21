@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Life Expectancy 3D Globe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #0a0a1a 100%);
+            overflow: hidden;
+            color: white;
+        }
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            cursor: grab;
+        }
+        #container:active {
+            cursor: grabbing;
+        }
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 280px;
+            z-index: 10;
+        }
+        h1 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #4fc3f7;
+        }
+        .info-text {
+            font-size: 11px;
+            line-height: 1.4;
+            color: #b0bec5;
+            margin-bottom: 10px;
+        }
+        .manual-hint {
+            font-size: 11px;
+            color: #66bb6a;
+            margin-top: 5px;
+            text-align: center;
+            font-style: italic;
+        }
+        #controls {
+            margin-top: 10px;
+        }
+        .control-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            font-size: 10px;
+            color: #90a4ae;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin-top: 3px;
+        }
+        #year-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4fc3f7;
+            text-align: center;
+            margin: 5px 0;
+        }
+        .play-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            width: 100%;
+            margin-top: 8px;
+            transition: transform 0.2s;
+        }
+        .play-button:hover {
+            transform: scale(1.05);
+        }
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+        }
+        .legend-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+        .legend-gradient {
+            width: 200px;
+            height: 20px;
+            background: linear-gradient(to right, #d32f2f, #ffa726, #fdd835, #66bb6a, #26a69a);
+            border-radius: 3px;
+            margin-bottom: 5px;
+        }
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #90a4ae;
+        }
+        #tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px 15px;
+            border-radius: 5px;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 13px;
+        }
+        .tooltip-country {
+            font-weight: bold;
+            color: #4fc3f7;
+            margin-bottom: 5px;
+        }
+        #file-upload {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+            max-width: 250px;
+        }
+        .upload-button {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .file-label {
+            background: #37474f;
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            display: block;
+            font-size: 11px;
+        }
+        .file-label:hover {
+            background: #455a64;
+        }
+        #status {
+            font-size: 10px;
+            color: #66bb6a;
+            margin-top: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="info-panel">
+        <h1>Global Life Expectancy</h1>
+        <div class="info-text">
+            Explore life expectancy trends across the world from 2000 to 2015. 
+            Each country is represented by a colored bar - hover to see details.
+        </div>
+        <div id="controls">
+            <div class="control-group">
+                <label>Year</label>
+                <div id="year-display">2015</div>
+                <input type="range" id="year-slider" min="2000" max="2015" value="2015" step="1">
+            </div>
+            <button class="play-button" id="play-button">▶ Play Timeline</button>
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <label>Rotation</label>
+                <button class="play-button" id="rotate-button" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    🔄 Auto-Rotate: ON
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="file-upload">
+        <div style="font-size: 12px; color: #4fc3f7; margin-bottom: 8px; font-weight: bold;">
+            Load Dataset
+        </div>
+        <div style="font-size: 10px; color: #90a4ae; margin-bottom: 8px;">
+            Upload Life Expectancy Data.csv
+        </div>
+        <label for="csv-file" class="file-label">
+            Choose CSV File
+        </label>
+        <input type="file" id="csv-file" accept=".csv">
+        <div id="status"></div>
+    </div>
+
+    <div id="legend">
+        <div class="legend-title">Life Expectancy (years)</div>
+        <div class="legend-gradient"></div>
+        <div class="legend-labels">
+            <span>40</span>
+            <span>55</span>
+            <span>70</span>
+            <span>85</span>
+        </div>
+    </div>
+
+    <div id="tooltip"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
+    <script>
+        let scene, camera, renderer, globe, bars = [];
+        let data = [];
+        let currentYear = 2015;
+        let isPlaying = false;
+        let animationId;
+        let autoRotate = true;
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let rotationSpeed = { x: 0, y: 0.002 };
+
+        // Country coordinates (latitude, longitude)
+        const countryCoords = {
+            'Afghanistan': [33.9391, 67.7099], 'Albania': [41.1533, 20.1683], 'Algeria': [28.0339, 1.6596],
+            'Angola': [-11.2027, 17.8739], 'Argentina': [-38.4161, -63.6167], 'Armenia': [40.0691, 45.0382],
+            'Australia': [-25.2744, 133.7751], 'Austria': [47.5162, 14.5501], 'Azerbaijan': [40.1431, 47.5769],
+            'Bahamas': [25.0343, -77.3963], 'Bahrain': [26.0667, 50.5577], 'Bangladesh': [23.6850, 90.3563],
+            'Barbados': [13.1939, -59.5432], 'Belarus': [53.7098, 27.9534], 'Belgium': [50.5039, 4.4699],
+            'Belize': [17.1899, -88.4976], 'Benin': [9.3077, 2.3158], 'Bhutan': [27.5142, 90.4336],
+            'Bolivia': [-16.2902, -63.5887], 'Bosnia and Herzegovina': [43.9159, 17.6791], 'Botswana': [-22.3285, 24.6849],
+            'Brazil': [-14.2350, -51.9253], 'Brunei Darussalam': [4.5353, 114.7277], 'Bulgaria': [42.7339, 25.4858],
+            'Burkina Faso': [12.2383, -1.5616], 'Burundi': [-3.3731, 29.9189], 'Cambodia': [12.5657, 104.9910],
+            "Côte d'Ivoire": [7.5400, -5.5471], 'Cameroon': [7.3697, 12.3547], 'Canada': [56.1304, -106.3468],
+            'Central African Republic': [6.6111, 20.9394], 'Chad': [15.4542, 18.7322], 'Chile': [-35.6751, -71.5430],
+            'China': [35.8617, 104.1954], 'Colombia': [4.5709, -74.2973], 'Comoros': [-11.6455, 43.3333],
+            'Congo': [-4.0383, 21.7587], 'Costa Rica': [9.7489, -83.7534], 'Croatia': [45.1, 15.2],
+            'Cuba': [21.5218, -77.7812], 'Cyprus': [35.1264, 33.4299], 'Czech Republic': [49.8175, 15.4730],
+            'Czechia': [49.8175, 15.4730], 'Democratic Republic of the Congo': [-4.0383, 21.7587],
+            "Democratic People's Republic of Korea": [40.3399, 127.5101], 'Denmark': [56.2639, 9.5018],
+            'Djibouti': [11.8251, 42.5903], 'Dominican Republic': [18.7357, -70.1627], 'Ecuador': [-1.8312, -78.1834],
+            'Egypt': [26.8206, 30.8025], 'El Salvador': [13.7942, -88.8965], 'Equatorial Guinea': [1.6508, 10.2679],
+            'Eritrea': [15.1794, 39.7823], 'Estonia': [58.5953, 25.0136], 'Ethiopia': [9.1450, 40.4897],
+            'Fiji': [-17.7134, 178.0650], 'Finland': [61.9241, 25.7482], 'France': [46.2276, 2.2137],
+            'Gabon': [-0.8037, 11.6094], 'Gambia': [13.4432, -15.3101], 'Georgia': [42.3154, 43.3569],
+            'Germany': [51.1657, 10.4515], 'Ghana': [7.9465, -1.0232], 'Greece': [39.0742, 21.8243],
+            'Grenada': [12.1165, -61.6790], 'Guatemala': [15.7835, -90.2308], 'Guinea': [9.9456, -9.6966],
+            'Guinea-Bissau': [11.8037, -15.1804], 'Guyana': [4.8604, -58.9302], 'Haiti': [18.9712, -72.2852],
+            'Honduras': [15.2000, -86.2419], 'Hungary': [47.1625, 19.5033], 'Iceland': [64.9631, -19.0208],
+            'India': [20.5937, 78.9629], 'Indonesia': [-0.7893, 113.9213], 'Iran': [32.4279, 53.6880],
+            'Iraq': [33.2232, 43.6793], 'Ireland': [53.4129, -8.2439], 'Israel': [31.0461, 34.8516],
+            'Italy': [41.8719, 12.5674], 'Jamaica': [18.1096, -77.2975], 'Japan': [36.2048, 138.2529],
+            'Jordan': [30.5852, 36.2384], 'Kazakhstan': [48.0196, 66.9237], 'Kenya': [-0.0236, 37.9062],
+            'Kiribati': [-3.3704, -168.7340], 'Kuwait': [29.3117, 47.4818], 'Kyrgyzstan': [41.2044, 74.7661],
+            "Lao People's Democratic Republic": [19.8563, 102.4955], 'Latvia': [56.8796, 24.6032],
+            'Lebanon': [33.8547, 35.8623], 'Lesotho': [-29.6100, 28.2336], 'Liberia': [6.4281, -9.4295],
+            'Libya': [26.3351, 17.2283], 'Lithuania': [55.1694, 23.8813], 'Luxembourg': [49.8153, 6.1296],
+            'Madagascar': [-18.7669, 46.8691], 'Malawi': [-13.2543, 34.3015], 'Malaysia': [4.2105, 101.9758],
+            'Maldives': [3.2028, 73.2207], 'Mali': [17.5707, -3.9962], 'Malta': [35.9375, 14.3754],
+            'Mauritania': [21.0079, -10.9408], 'Mauritius': [-20.3484, 57.5522], 'Mexico': [23.6345, -102.5528],
+            'Micronesia (Federated States of)': [7.4256, 150.5508], 'Mongolia': [46.8625, 103.8467],
+            'Montenegro': [42.7087, 19.3744], 'Morocco': [31.7917, -7.0926], 'Mozambique': [-18.6657, 35.5296],
+            'Myanmar': [21.9162, 95.9560], 'Namibia': [-22.9576, 18.4904], 'Nepal': [28.3949, 84.1240],
+            'Netherlands': [52.1326, 5.2913], 'New Zealand': [-40.9006, 174.8860], 'Nicaragua': [12.8654, -85.2072],
+            'Niger': [17.6078, 8.0817], 'Nigeria': [9.0820, 8.6753], 'Norway': [60.4720, 8.4689],
+            'Oman': [21.4735, 55.9754], 'Pakistan': [30.3753, 69.3451], 'Panama': [8.5380, -80.7821],
+            'Papua New Guinea': [-6.3150, 143.9555], 'Paraguay': [-23.4425, -58.4438], 'Peru': [-9.1900, -75.0152],
+            'Philippines': [12.8797, 121.7740], 'Poland': [51.9194, 19.1451], 'Portugal': [39.3999, -8.2245],
+            'Qatar': [25.3548, 51.1839], 'Republic of Korea': [35.9078, 127.7669], 'Republic of Moldova': [47.4116, 28.3699],
+            'Romania': [45.9432, 24.9668], 'Russian Federation': [61.5240, 105.3188], 'Rwanda': [-1.9403, 29.8739],
+            'Saint Lucia': [13.9094, -60.9789], 'Saint Vincent and the Grenadines': [12.9843, -61.2872],
+            'Samoa': [-13.7590, -172.1046], 'Sao Tome and Principe': [0.1864, 6.6131], 'Saudi Arabia': [23.8859, 45.0792],
+            'Senegal': [14.4974, -14.4524], 'Serbia': [44.0165, 21.0059], 'Seychelles': [-4.6796, 55.4920],
+            'Sierra Leone': [8.4606, -11.7799], 'Singapore': [1.3521, 103.8198], 'Slovakia': [48.6690, 19.6990],
+            'Slovenia': [46.1512, 14.9955], 'Solomon Islands': [-9.6457, 160.1562], 'Somalia': [5.1521, 46.1996],
+            'South Africa': [-30.5595, 22.9375], 'South Sudan': [6.8770, 31.3070], 'Spain': [40.4637, -3.7492],
+            'Sri Lanka': [7.8731, 80.7718], 'Sudan': [12.8628, 30.2176], 'Suriname': [3.9193, -56.0278],
+            'Swaziland': [-26.5225, 31.4659], 'Sweden': [60.1282, 18.6435], 'Switzerland': [46.8182, 8.2275],
+            'Syrian Arab Republic': [34.8021, 38.9968], 'Tajikistan': [38.8610, 71.2761], 'Thailand': [15.8700, 100.9925],
+            'The former Yugoslav republic of Macedonia': [41.6086, 21.7453], 'Timor-Leste': [-8.8742, 125.7275],
+            'Togo': [8.6195, 0.8248], 'Tonga': [-21.1789, -175.1982], 'Trinidad and Tobago': [10.6918, -61.2225],
+            'Tunisia': [33.8869, 9.5375], 'Turkey': [38.9637, 35.2433], 'Turkmenistan': [38.9697, 59.5563],
+            'Uganda': [1.3733, 32.2903], 'Ukraine': [48.3794, 31.1656], 'United Arab Emirates': [23.4241, 53.8478],
+            'United Kingdom': [55.3781, -3.4360], 'United Republic of Tanzania': [-6.3690, 34.8888],
+            'United States of America': [37.0902, -95.7129], 'Uruguay': [-32.5228, -55.7658],
+            'Uzbekistan': [41.3775, 64.5853], 'Vanuatu': [-15.3767, 166.9592], 'Venezuela': [6.4238, -66.5897],
+            'Viet Nam': [14.0583, 108.2772], 'Yemen': [15.5527, 48.5164], 'Zambia': [-13.1339, 27.8493],
+            'Zimbabwe': [-19.0154, 29.1549]
+        };
+
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x000000, 10, 50);
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 15;
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 1);
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Create globe
+            createGlobe();
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            sunLight.position.set(5, 3, 5);
+            scene.add(sunLight);
+
+            const fillLight = new THREE.DirectionalLight(0x4fc3f7, 0.3);
+            fillLight.position.set(-5, 0, -5);
+            scene.add(fillLight);
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById('year-slider').addEventListener('input', onYearChange);
+            document.getElementById('play-button').addEventListener('click', togglePlay);
+            document.getElementById('rotate-button').addEventListener('click', toggleRotation);
+            document.getElementById('csv-file').addEventListener('change', handleFileUpload);
+            
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            renderer.domElement.addEventListener('mousedown', onMouseDown);
+            renderer.domElement.addEventListener('mouseup', onMouseUp);
+            renderer.domElement.addEventListener('mouseleave', onMouseUp);
+
+            animate();
+        }
+
+        function createGlobe() {
+            // Create a group to hold globe and all bars
+            globe = new THREE.Group();
+            scene.add(globe);
+            
+            const geometry = new THREE.SphereGeometry(5, 64, 64);
+            
+            // Load Earth texture
+            const textureLoader = new THREE.TextureLoader();
+            const earthTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg');
+            const bumpTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_normal_2048.jpg');
+            const specularTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_specular_2048.jpg');
+            
+            const material = new THREE.MeshPhongMaterial({
+                map: earthTexture,
+                bumpMap: bumpTexture,
+                bumpScale: 0.05,
+                specularMap: specularTexture,
+                specular: new THREE.Color(0x333333),
+                shininess: 25
+            });
+            
+            const earthMesh = new THREE.Mesh(geometry, material);
+            globe.add(earthMesh);
+
+            // Add atmosphere glow
+            const atmosphereGeometry = new THREE.SphereGeometry(5.2, 64, 64);
+            const atmosphereMaterial = new THREE.MeshBasicMaterial({
+                color: 0x4fc3f7,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.BackSide
+            });
+            const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+            globe.add(atmosphere);
+        }
+
+        function latLonToVector3(lat, lon, radius) {
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lon + 180) * (Math.PI / 180);
+            const x = -radius * Math.sin(phi) * Math.cos(theta);
+            const y = radius * Math.cos(phi);
+            const z = radius * Math.sin(phi) * Math.sin(theta);
+            return new THREE.Vector3(x, y, z);
+        }
+
+        function getColorForLifeExpectancy(lifeExp) {
+            // Color scale: red (low) -> orange -> yellow -> green -> teal (high)
+            if (lifeExp < 50) return new THREE.Color(0xd32f2f); // Dark red
+            if (lifeExp < 60) return new THREE.Color(0xffa726); // Orange
+            if (lifeExp < 70) return new THREE.Color(0xfdd835); // Yellow
+            if (lifeExp < 80) return new THREE.Color(0x66bb6a); // Green
+            return new THREE.Color(0x26a69a); // Teal
+        }
+
+        function createBars(year) {
+            // Remove existing bars from globe group
+            bars.forEach(bar => {
+                globe.remove(bar.mesh);
+                bar.mesh.geometry.dispose();
+                bar.mesh.material.dispose();
+            });
+            bars = [];
+
+            const yearData = data.filter(d => d.Year === year);
+            
+            yearData.forEach(country => {
+                const coords = countryCoords[country.Country];
+                if (!coords || !country.LifeExpectancy) return;
+
+                const [lat, lon] = coords;
+                const lifeExp = parseFloat(country.LifeExpectancy);
+                
+                // Calculate bar height based on life expectancy
+                const barHeight = (lifeExp / 85) * 1.5; // Scale to max 1.5 units
+                const barWidth = 0.08;
+                
+                const geometry = new THREE.CylinderGeometry(barWidth, barWidth, barHeight, 8);
+                const material = new THREE.MeshPhongMaterial({
+                    color: getColorForLifeExpectancy(lifeExp),
+                    emissive: getColorForLifeExpectancy(lifeExp),
+                    emissiveIntensity: 0.3,
+                    shininess: 80
+                });
+                
+                const bar = new THREE.Mesh(geometry, material);
+                
+                // Position on globe surface
+                const surfacePos = latLonToVector3(lat, lon, 5);
+                
+                // Calculate normal (direction from center to surface)
+                const normal = surfacePos.clone().normalize();
+                
+                // Position bar at surface and extend along normal
+                bar.position.copy(surfacePos).add(normal.clone().multiplyScalar(barHeight / 2));
+                
+                // Align bar with normal using quaternion
+                const up = new THREE.Vector3(0, 1, 0);
+                const quaternion = new THREE.Quaternion().setFromUnitVectors(up, normal);
+                bar.quaternion.copy(quaternion);
+                
+                // Add bar to globe group so it rotates with the globe
+                globe.add(bar);
+                
+                bars.push({
+                    mesh: bar,
+                    country: country.Country,
+                    lifeExpectancy: lifeExp,
+                    position: surfacePos,
+                    normal: normal
+                });
+            });
+        }
+
+        function onYearChange(e) {
+            currentYear = parseInt(e.target.value);
+            document.getElementById('year-display').textContent = currentYear;
+            if (data.length > 0) {
+                createBars(currentYear);
+            }
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const button = document.getElementById('play-button');
+            button.textContent = isPlaying ? '⏸ Pause' : '▶ Play Timeline';
+            
+            if (isPlaying) {
+                playTimeline();
+            }
+        }
+
+        function playTimeline() {
+            if (!isPlaying) return;
+            
+            currentYear++;
+            if (currentYear > 2015) currentYear = 2000;
+            
+            document.getElementById('year-slider').value = currentYear;
+            document.getElementById('year-display').textContent = currentYear;
+            createBars(currentYear);
+            
+            setTimeout(playTimeline, 500);
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('status').textContent = 'Loading...';
+
+            Papa.parse(file, {
+                header: true,
+                complete: function(results) {
+                    data = results.data.filter(row => 
+                        row.Country && row.Year && row['Life expectancy ']
+                    ).map(row => ({
+                        Country: row.Country.trim(),
+                        Year: parseInt(row.Year),
+                        LifeExpectancy: parseFloat(row['Life expectancy '])
+                    }));
+
+                    if (data.length > 0) {
+                        document.getElementById('status').textContent = `✓ Loaded ${data.length} records`;
+                        createBars(currentYear);
+                    } else {
+                        document.getElementById('status').textContent = '✗ No valid data found';
+                    }
+                },
+                error: function(error) {
+                    document.getElementById('status').textContent = '✗ Error loading file';
+                    console.error('Parse error:', error);
+                }
+            });
+        }
+
+        function toggleRotation() {
+            autoRotate = !autoRotate;
+            const button = document.getElementById('rotate-button');
+            
+            if (autoRotate) {
+                button.innerHTML = 'Auto-Rotate: ON';
+                button.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                rotationSpeed.y = 0.002;
+            } else {
+                button.innerHTML = 'Manual Control';
+                button.style.background = 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+                rotationSpeed.y = 0;
+            }
+        }
+
+        function onMouseDown(event) {
+            if (!autoRotate) {
+                isDragging = true;
+                previousMousePosition = {
+                    x: event.clientX,
+                    y: event.clientY
+                };
+            }
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+        }
+
+        function onMouseMove(event) {
+            // Tooltip functionality
+            const mouse = new THREE.Vector2(
+                (event.clientX / window.innerWidth) * 2 - 1,
+                -(event.clientY / window.innerHeight) * 2 + 1
+            );
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+
+            const intersects = raycaster.intersectObjects(bars.map(b => b.mesh));
+            const tooltip = document.getElementById('tooltip');
+
+            if (intersects.length > 0) {
+                const bar = bars.find(b => b.mesh === intersects[0].object);
+                if (bar) {
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = event.clientX + 15 + 'px';
+                    tooltip.style.top = event.clientY + 15 + 'px';
+                    tooltip.innerHTML = `
+                        <div class="tooltip-country">${bar.country}</div>
+                        <div>Life Expectancy: ${bar.lifeExpectancy.toFixed(1)} years</div>
+                        <div>Year: ${currentYear}</div>
+                    `;
+                }
+            } else {
+                tooltip.style.display = 'none';
+            }
+
+            // Manual rotation when dragging
+            if (isDragging && !autoRotate) {
+                const deltaMove = {
+                    x: event.clientX - previousMousePosition.x,
+                    y: event.clientY - previousMousePosition.y
+                };
+
+                globe.rotation.y += deltaMove.x * 0.005;
+                globe.rotation.x += deltaMove.y * 0.005;
+
+                // Limit vertical rotation
+                globe.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, globe.rotation.x));
+
+                previousMousePosition = {
+                    x: event.clientX,
+                    y: event.clientY
+                };
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Auto-rotate globe if enabled
+            if (autoRotate) {
+                globe.rotation.y += rotationSpeed.y;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>
